@@ -33,4 +33,42 @@ export interface SimpleAudioInput extends HybridObject<{
    */
   addInputLevelListener(callback: (level: number) => void): number;
   removeInputLevelListener(id: number): void;
+  /**
+   * Notifies on every audio route change (e.g. a mic plugged/unplugged, a
+   * Bluetooth device connecting) with no payload — call
+   * `getAvailableAudioInputs` again from the callback to refresh your list.
+   *
+   * iOS only; returns a listener id to pass to `removeRouteChangeListener`.
+   */
+  addRouteChangeListener(callback: () => void): number;
+  removeRouteChangeListener(id: number): void;
+  /**
+   * Configures the underlying `AVAudioSession` category/mode/options. Throws
+   * on an invalid category, mode, or incompatible category option; degraded
+   * or unsupported preferences (e.g. `prefersEchoCancelledInput` pre-iOS
+   * 18.2) report a warning instead of failing the whole call.
+   *
+   * iOS only.
+   */
+  configureAudioSession(
+    category: string,
+    mode: string,
+    policy: string,
+    categoryOptions: string[],
+    prefersNoInterruptionFromSystemAlerts: boolean,
+    prefersInterruptionOnRouteDisconnect: boolean,
+    allowHapticsAndSystemSoundsDuringRecording: boolean,
+    prefersEchoCancelledInput: boolean,
+    warningCallback: (warning: AudioSessionWarning) => void
+  ): void;
+  /**
+   * Activates the `AVAudioSession` (call after `configureAudioSession`).
+   * Resolves even if the session was already active (emits a warning in
+   * that case instead of failing).
+   *
+   * iOS only.
+   */
+  activate(
+    warningCallback: (warning: AudioSessionWarning) => void
+  ): Promise<void>;
 }

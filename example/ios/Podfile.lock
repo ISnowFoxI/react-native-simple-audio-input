@@ -1846,7 +1846,7 @@ PODS:
     - React-utils (= 0.86.2)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.86.2)
-  - SimpleAudioInput (0.1.0):
+  - SimpleAudioInput (0.1.1):
     - hermes-engine
     - NitroModules
     - RCTRequired
@@ -2185,7 +2185,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 3bbb7de19774794a7428ef623a7b777106cf3737
   ReactCommon: 9002f006f571256348994183f7d4387aa7cf84e8
   ReactNativeDependencies: 2bd6854ade79bf1b60586d1ab7813a389df1b6bf
-  SimpleAudioInput: 083a241666473e5cab961c582da2a996789edea2
+  SimpleAudioInput: f8ef07b0bd5feefffc57976466202a8744d86a03
   Yoga: 9891cfb1c680f64de9c41b09e7453dea33454d2b
 
 PODFILE CHECKSUM: 811a6b5cf2eddab1e6cdcc746c25ffc9a511c4e1

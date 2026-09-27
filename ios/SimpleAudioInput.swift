@@ -3,11 +3,16 @@ import Foundation
 import NitroModules
 
 typealias InputLevelListener = (Double) -> Void
+typealias RouteChangeListener = () -> Void
 typealias WarningCallback = (AudioSessionWarning) -> Void
 
 struct Listener<T> {
   let id: Double
   let callback: T
+}
+
+enum AudioSessionError: Error {
+  case error(name: String, message: String)
 }
 
 @objcMembers
@@ -16,9 +21,11 @@ class SimpleAudioInput: HybridSimpleAudioInputSpec {
   // MARK: Initialization
 
   private var inputLevelListeners: [Listener<InputLevelListener>] = []
+  private var routeChangeListeners: [Listener<RouteChangeListener>] = []
   private var nextListenerId: Double = 0
 
   private let audioSession = AVAudioSession.sharedInstance()
+  private var isSessionActive = false
 
   private var inputLevelEngine = AVAudioEngine()
   private var isTappingInputLevel = false
@@ -31,6 +38,7 @@ class SimpleAudioInput: HybridSimpleAudioInputSpec {
   deinit {
     unregisterListeners()
     stopInputLevelTap()
+    routeChangeListeners.removeAll()
   }
 
   private func registerListeners() {
@@ -78,6 +86,10 @@ class SimpleAudioInput: HybridSimpleAudioInputSpec {
   }
 
   @objc private func handleDidEnterBackground(_ notification: Notification) {
+    // The system deactivates the session on background; resync our cached
+    // flag so a subsequent `activate()` actually reactivates rather than
+    // silently no-op'ing because it thinks the session is still active.
+    isSessionActive = false
     pauseInputLevelEngineIfNeeded()
   }
 
@@ -112,6 +124,21 @@ class SimpleAudioInput: HybridSimpleAudioInputSpec {
     if isTappingInputLevel, AVAudioSession.RouteChangeReason(rawValue: rawReason) != .unknown {
       restartInputLevelTap()
     }
+
+    routeChangeListeners.forEach { $0.callback() }
+  }
+
+  // MARK: Route change
+
+  func addRouteChangeListener(callback: @escaping RouteChangeListener) throws -> Double {
+    let listener = Listener(id: nextListenerId, callback: callback)
+    routeChangeListeners.append(listener)
+    nextListenerId += 1
+    return listener.id
+  }
+
+  func removeRouteChangeListener(id: Double) throws {
+    routeChangeListeners.removeAll { $0.id == id }
   }
 
   // MARK: Input level metering
@@ -284,6 +311,265 @@ class SimpleAudioInput: HybridSimpleAudioInputSpec {
         return .continuitymicrophone
       }
       return .unknown
+    }
+  }
+
+  // MARK: Session configuration & activation
+
+  public func activate(warningCallback: @escaping WarningCallback) throws -> Promise<Void> {
+    return Promise.async {
+      do {
+        if !self.isSessionActive {
+          try self.audioSession.setActive(true)
+          self.isSessionActive = true
+        } else {
+          warningCallback(
+            AudioSessionWarning(
+              name: "MULTIPLE_ACTIVATION_WARNING",
+              message: "Activation function called while the session was already active. Did you mean to do this?"
+            ))
+        }
+      } catch {
+        throw AudioSessionError.error(
+          name: "ACTIVATION_FAILURE",
+          message: "Failed to activate audio session with error: \(error.localizedDescription)"
+        )
+      }
+    }
+  }
+
+  public func configureAudioSession(
+    category categoryName: String,
+    mode modeName: String,
+    policy policyName: String,
+    categoryOptions optionsArray: [String],
+    prefersNoInterruptionFromSystemAlerts: Bool,
+    prefersInterruptionOnRouteDisconnect: Bool,
+    allowHapticsAndSystemSoundsDuringRecording: Bool,
+    prefersEchoCancelledInput: Bool,
+    warningCallback: @escaping WarningCallback
+  ) throws {
+    let category: AVAudioSession.Category = try {
+      switch categoryName {
+      case "Ambient": return .ambient
+      case "SoloAmbient": return .soloAmbient
+      case "Playback": return .playback
+      case "Record": return .record
+      case "PlayAndRecord": return .playAndRecord
+      case "MultiRoute": return .multiRoute
+      default:
+        throw AudioSessionError.error(
+          name: "INVALID_CATEGORY",
+          message: "Unknown category: \(categoryName)"
+        )
+      }
+    }()
+
+    let mode: AVAudioSession.Mode = try {
+      switch modeName {
+      case "Default": return .default
+      case "VoiceChat": return .voiceChat
+      case "VideoChat": return .videoChat
+      case "GameChat": return .gameChat
+      case "VideoRecording": return .videoRecording
+      case "Measurement": return .measurement
+      case "MoviePlayback": return .moviePlayback
+      case "SpokenAudio": return .spokenAudio
+      case "VoicePrompt": return .voicePrompt
+      default:
+        throw AudioSessionError.error(
+          name: "INVALID_MODE",
+          message: "Unknown mode: \(modeName)"
+        )
+      }
+    }()
+
+    let policy: AVAudioSession.RouteSharingPolicy = {
+      switch policyName {
+      case "LongFormAudio": return .longFormAudio
+      case "LongFormVideo": return .longFormVideo
+      case "Independent": return .independent
+      default: return .default
+      }
+    }()
+
+    var options: AVAudioSession.CategoryOptions = []
+    for optionName in optionsArray {
+      switch optionName {
+      case "MixWithOthers":
+        guard
+          category == .playAndRecord || category == .playback || category == .multiRoute
+            || category == .ambient
+        else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "MixWithOthers is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.mixWithOthers)
+      case "AllowBluetoothHFP":
+        guard category == .playAndRecord || category == .record else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "AllowBluetoothHFP is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.allowBluetoothHFP)
+      case "AllowBluetoothA2DP":
+        if category == .playAndRecord {
+          options.insert(.allowBluetoothA2DP)
+        } else if category == .playback || category == .soloAmbient || category == .ambient {
+          warningCallback(
+            AudioSessionWarning(
+              name: "OPTION_NOT_APPLIED",
+              message: "AllowBluetoothA2DP is applied by default for category \(categoryName)."
+            ))
+        } else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "AllowBluetoothA2DP is not supported for category \(categoryName)"
+          )
+        }
+      case "AllowAirPlay":
+        guard category == .playAndRecord else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "AllowAirPlay is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.allowAirPlay)
+      case "DuckOthers":
+        guard category == .playAndRecord || category == .playback || category == .multiRoute else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "DuckOthers is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.duckOthers)
+      case "DefaultToSpeaker":
+        guard category == .playAndRecord else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "DefaultToSpeaker is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.defaultToSpeaker)
+      case "InterruptSpokenAudioAndMixWithOthers":
+        guard category == .playAndRecord || category == .playback || category == .multiRoute else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "InterruptSpokenAudioAndMixWithOthers is not supported for category \(categoryName)"
+          )
+        }
+        options.insert(.interruptSpokenAudioAndMixWithOthers)
+      case "OverrideMutedMicrophoneInterruption":
+        guard #available(iOS 16.0, *), category == .playAndRecord || category == .record else {
+          throw AudioSessionError.error(
+            name: "UNSUPPORTED_CATEGORY_OPTION",
+            message: "OverrideMutedMicrophoneInterruption requires iOS 16.0+ and category PlayAndRecord or Record."
+          )
+        }
+        options.insert(.overrideMutedMicrophoneInterruption)
+      default:
+        throw AudioSessionError.error(
+          name: "INVALID_CATEGORY_OPTION",
+          message: "Unknown category option: \(optionName)"
+        )
+      }
+    }
+
+    do {
+      try audioSession.setCategory(category, mode: mode, policy: policy, options: options)
+    } catch {
+      if error.localizedDescription.contains("The operation couldn't be completed") {
+        throw AudioSessionError.error(
+          name: "MICROPHONE_IN_USE",
+          message: "Failed to configure audio session: \(error.localizedDescription)"
+        )
+      } else {
+        throw AudioSessionError.error(
+          name: "INVALID_CONFIGURATION",
+          message: "Failed to set category: \(error.localizedDescription)"
+        )
+      }
+    }
+
+    do {
+      try audioSession.setPrefersNoInterruptionsFromSystemAlerts(prefersNoInterruptionFromSystemAlerts)
+    } catch {
+      warningCallback(
+        AudioSessionWarning(
+          name: "PREFERENCE_FAILURE_NO_INTERRUPTIONS",
+          message: "Failed to set prefersNoInterruptionFromSystemAlerts: \(error.localizedDescription)"
+        ))
+    }
+
+    do {
+      try audioSession.setAllowHapticsAndSystemSoundsDuringRecording(allowHapticsAndSystemSoundsDuringRecording)
+    } catch {
+      warningCallback(
+        AudioSessionWarning(
+          name: "PREFERENCE_FAILURE_HAPTICS",
+          message: "Failed to set allowHapticsAndSystemSoundsDuringRecording: \(error.localizedDescription)"
+        ))
+    }
+
+    if #available(iOS 17.0, *) {
+      do {
+        try audioSession.setPrefersInterruptionOnRouteDisconnect(prefersInterruptionOnRouteDisconnect)
+      } catch {
+        warningCallback(
+          AudioSessionWarning(
+            name: "PREFERENCE_FAILURE_ROUTE_DISCONNECT",
+            message: "Failed to set prefersInterruptionOnRouteDisconnect: \(error.localizedDescription)"
+          ))
+      }
+    } else if prefersInterruptionOnRouteDisconnect {
+      warningCallback(
+        AudioSessionWarning(
+          name: "PREFERENCE_FAILURE_ROUTE_DISCONNECT",
+          message: "Setting prefersInterruptionOnRouteDisconnect requires iOS 17 or later"
+        ))
+    }
+
+    if prefersEchoCancelledInput {
+      if #available(iOS 18.2, *) {
+        if category != .playAndRecord {
+          warningCallback(
+            AudioSessionWarning(
+              name: "PREFERENCE_WARNING_ECHO_CANCELLATION",
+              message: "Setting prefersEchoCancelledInput requires category PlayAndRecord, but found \(categoryName)"
+            ))
+        } else if mode != .default {
+          warningCallback(
+            AudioSessionWarning(
+              name: "PREFERENCE_WARNING_ECHO_CANCELLATION",
+              message: "Setting prefersEchoCancelledInput requires mode Default, but found \(modeName)"
+            ))
+        } else if !audioSession.isEchoCancelledInputAvailable {
+          warningCallback(
+            AudioSessionWarning(
+              name: "PREFERENCE_WARNING_ECHO_CANCELLATION",
+              message: "Setting prefersEchoCancelledInput requires hardware support for echo cancellation, which is not available on this device"
+            ))
+        } else {
+          do {
+            try audioSession.setPrefersEchoCancelledInput(prefersEchoCancelledInput)
+          } catch {
+            warningCallback(
+              AudioSessionWarning(
+                name: "PREFERENCE_WARNING_ECHO_CANCELLATION",
+                message: "Failed to set prefersEchoCancelledInput: \(error.localizedDescription)"
+              ))
+          }
+        }
+      } else {
+        warningCallback(
+          AudioSessionWarning(
+            name: "PREFERENCE_WARNING_ECHO_CANCELLATION",
+            message: "Setting prefersEchoCancelledInput requires iOS 18.2 or later"
+          ))
+      }
     }
   }
 }

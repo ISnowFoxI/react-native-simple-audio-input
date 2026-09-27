@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  activate,
   addInputLevelListener,
+  addRouteChangeListener,
+  configureAudio,
   getAvailableAudioInputs,
   setPreferredAudioInput,
   type PortDescription,
@@ -13,9 +16,24 @@ export default function App() {
   const [level, setLevel] = useState(0);
 
   useEffect(() => {
+    // Recording needs a record-capable category before inputs/mics can be
+    // enumerated or metered — configure it once, then activate.
+    configureAudio({
+      category: 'PlayAndRecord',
+      mode: 'VideoRecording',
+      categoryOptions: ['AllowBluetoothHFP'],
+    });
+    activate();
+
     setInputs(getAvailableAudioInputs());
-    return addInputLevelListener(setLevel);
+    // Refresh the list whenever the route changes (e.g. a mic is
+    // plugged/unplugged or a Bluetooth device connects).
+    return addRouteChangeListener(() => {
+      setInputs(getAvailableAudioInputs());
+    });
   }, []);
+
+  useEffect(() => addInputLevelListener(setLevel), []);
 
   return (
     <View style={styles.container}>
