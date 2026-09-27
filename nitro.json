@@ -1,0 +1,23 @@
+{
+  "cxxNamespace": ["simpleaudioconfig"],
+  "ios": {
+    "iosModuleName": "SimpleAudioConfig"
+  },
+  "android": {
+    "androidNamespace": ["simpleaudioconfig"],
+    "androidCxxLibName": "simpleaudioconfig"
+  },
+  "autolinking": {
+    "SimpleAudioConfig": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "SimpleAudioConfig"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "SimpleAudioConfig"
+      }
+    }
+  },
+  "ignorePaths": ["node_modules"]
+}
