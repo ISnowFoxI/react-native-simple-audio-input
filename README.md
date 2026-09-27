@@ -1,4 +1,4 @@
-# react-native-simple-audio-config
+# react-native-simple-audio-input
 
 A simple audio configuration library to use in tandem with react-native-vision-camera
 
@@ -6,7 +6,7 @@ A simple audio configuration library to use in tandem with react-native-vision-c
 
 
 ```sh
-npm install react-native-simple-audio-config react-native-nitro-modules
+npm install react-native-simple-audio-input react-native-nitro-modules
 
 > `react-native-nitro-modules` is required as this library relies on [Nitro Modules](https://nitro.margelo.com/).
 ```
@@ -16,7 +16,7 @@ npm install react-native-simple-audio-config react-native-nitro-modules
 
 
 ```js
-import { multiply } from 'react-native-simple-audio-config';
+import { multiply } from 'react-native-simple-audio-input';
 
 // ...
 

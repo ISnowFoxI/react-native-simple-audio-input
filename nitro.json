@@ -1,21 +1,21 @@
 {
-  "cxxNamespace": ["simpleaudioconfig"],
+  "cxxNamespace": ["simpleaudioinput"],
   "ios": {
-    "iosModuleName": "SimpleAudioConfig"
+    "iosModuleName": "SimpleAudioInput"
   },
   "android": {
-    "androidNamespace": ["simpleaudioconfig"],
-    "androidCxxLibName": "simpleaudioconfig"
+    "androidNamespace": ["simpleaudioinput"],
+    "androidCxxLibName": "simpleaudioinput"
   },
   "autolinking": {
-    "SimpleAudioConfig": {
+    "SimpleAudioInput": {
       "ios": {
         "language": "swift",
-        "implementationClassName": "SimpleAudioConfig"
+        "implementationClassName": "SimpleAudioInput"
       },
       "android": {
         "language": "kotlin",
-        "implementationClassName": "SimpleAudioConfig"
+        "implementationClassName": "SimpleAudioInput"
       }
     }
   },

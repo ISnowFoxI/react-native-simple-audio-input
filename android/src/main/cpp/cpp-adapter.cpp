@@ -1,11 +1,11 @@
 #include <jni.h>
-#include "simpleaudioconfigOnLoad.hpp"
+#include "simpleaudioinputOnLoad.hpp"
 
 #include <fbjni/fbjni.h>
 
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
   return facebook::jni::initialize(vm, []() {
-    margelo::nitro::simpleaudioconfig::registerAllNatives();
+    margelo::nitro::simpleaudioinput::registerAllNatives();
   });
 }

@@ -1,12 +1,12 @@
 {
-  "name": "react-native-simple-audio-config",
+  "name": "react-native-simple-audio-input",
   "version": "0.1.0",
   "description": "A simple audio configuration library to use in tandem with react-native-vision-camera",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "react-native-simple-audio-config-source": "./src/index.tsx",
+      "react-native-simple-audio-input-source": "./src/index.tsx",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
@@ -34,7 +34,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-simple-audio-config-example",
+    "example": "yarn workspace react-native-simple-audio-input-example",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
     "nitrogen": "nitrogen",
@@ -50,14 +50,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ISnowFoxI/react-native-simple-audio-config.git"
+    "url": "git+https://github.com/ISnowFoxI/react-native-simple-audio-input.git"
   },
   "author": "ISnowFoxI <o.yusif.dev@gmail.com> (https://github.com/ISnowFoxI)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ISnowFoxI/react-native-simple-audio-config/issues"
+    "url": "https://github.com/ISnowFoxI/react-native-simple-audio-input/issues"
   },
-  "homepage": "https://github.com/ISnowFoxI/react-native-simple-audio-config#readme",
+  "homepage": "https://github.com/ISnowFoxI/react-native-simple-audio-input#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

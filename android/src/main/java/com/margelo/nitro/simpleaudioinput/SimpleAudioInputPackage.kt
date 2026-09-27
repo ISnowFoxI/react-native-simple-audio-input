@@ -1,11 +1,11 @@
-package com.margelo.nitro.simpleaudioconfig
+package com.margelo.nitro.simpleaudioinput
 
 import com.facebook.react.BaseReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfoProvider
 
-class SimpleAudioConfigPackage : BaseReactPackage() {
+class SimpleAudioInputPackage : BaseReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return null
     }
@@ -16,7 +16,7 @@ class SimpleAudioConfigPackage : BaseReactPackage() {
 
     companion object {
         init {
-            System.loadLibrary("simpleaudioconfig")
+            System.loadLibrary("simpleaudioinput")
         }
     }
 }

@@ -13,7 +13,7 @@ const root = path.resolve(__dirname, '..');
 const config = withMetroConfig(getDefaultConfig(__dirname), {
   root,
   dirname: __dirname,
-  conditions: ['react-native-simple-audio-config-source'],
+  conditions: ['react-native-simple-audio-input-source'],
 });
 
 module.exports = config;

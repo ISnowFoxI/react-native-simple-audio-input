@@ -2,12 +2,12 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-simple-audio-config": ["./src/index"]
+      "react-native-simple-audio-input": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "customConditions": [
-      "react-native-simple-audio-config-source",
+      "react-native-simple-audio-input-source",
       "react-native-strict-api"
     ],
     "esModuleInterop": true,

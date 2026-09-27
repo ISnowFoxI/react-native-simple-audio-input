@@ -1,5 +1,5 @@
 buildscript {
-  ext.SimpleAudioConfig = [
+  ext.SimpleAudioInput = [
     kotlinVersion: "2.0.21",
     minSdkVersion: 24,
     compileSdkVersion: 36
@@ -10,7 +10,7 @@ buildscript {
       return rootProject.ext.get(prop)
     }
 
-    return SimpleAudioConfig[prop]
+    return SimpleAudioInput[prop]
   }
 
   repositories {
@@ -36,12 +36,12 @@ if (project.extensions.findByName("kotlin") == null) {
   apply plugin: "kotlin-android"
 }
 
-apply from: '../nitrogen/generated/android/simpleaudioconfig+autolinking.gradle'
+apply from: '../nitrogen/generated/android/simpleaudioinput+autolinking.gradle'
 
 apply plugin: "com.facebook.react"
 
 android {
-  namespace "com.margelo.nitro.simpleaudioconfig"
+  namespace "com.margelo.nitro.simpleaudioinput"
 
   compileSdkVersion getExtOrDefault("compileSdkVersion")
 
