@@ -1,6 +1,6 @@
 {
   "name": "react-native-simple-audio-input",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "A simple audio configuration library to use in tandem with react-native-vision-camera",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
