@@ -24,8 +24,6 @@ function logWarning(warning: AudioSessionWarning): void {
 /**
  * Lists the audio inputs (mics) currently available to the session, e.g. the
  * built-in mic, a wired headset mic, or a connected USB/Bluetooth mic.
- *
- * iOS only; returns an empty array on Android.
  */
 export function getAvailableAudioInputs(): PortDescription[] {
   return SimpleAudioInputHybridObject.getAvailableAudioInputs();
@@ -36,7 +34,10 @@ export function getAvailableAudioInputs(): PortDescription[] {
  * the built-in one. Pass one of the `PortDescription`s from
  * `getAvailableAudioInputs`.
  *
- * iOS only; no-op on Android.
+ * On Android, requires API 31+ and puts the session into
+ * `MODE_IN_COMMUNICATION` for the switch to take effect. Only inputs with a
+ * corresponding communication route are switchable; others log a warning and
+ * no-op.
  */
 export function setPreferredAudioInput(port: PortDescription): void {
   SimpleAudioInputHybridObject.setPreferredAudioInput(port, logWarning);
@@ -49,7 +50,7 @@ export function setPreferredAudioInput(port: PortDescription): void {
  * via `setPreferredAudioInput`), interruptions, and foreground/background
  * transitions.
  *
- * iOS only; the callback is never invoked on Android.
+ * On Android, requires the `RECORD_AUDIO` permission to already be granted.
  *
  * @returns a function that removes the listener.
  *
@@ -74,8 +75,6 @@ export function addInputLevelListener(
  * Notifies on every audio route change (e.g. a mic plugged/unplugged, a
  * Bluetooth device connecting) with no payload — call
  * `getAvailableAudioInputs` again from the callback to refresh your list.
- *
- * iOS only; the callback is never invoked on Android.
  *
  * @returns a function that removes the listener.
  *

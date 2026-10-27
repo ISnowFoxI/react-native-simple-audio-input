@@ -6,7 +6,7 @@ iOS mic input picking and live level metering, built for pairing with [react-nat
 - List and switch between available audio inputs (built-in mic, wired headset, USB/Bluetooth mic, etc.)
 - Meter the currently selected mic's input level in real time, for building a mic level indicator
 
-Powered by [Nitro Modules](https://nitro.margelo.com/). **iOS only** — on Android these calls are safe to call but no-op (`getAvailableAudioInputs` returns `[]`, `configureAudio`/`setPreferredAudioInput` do nothing, `activate` resolves immediately, listeners never fire).
+Powered by [Nitro Modules](https://nitro.margelo.com/). Input listing, route-change notifications, and the input-level meter also work on Android — the meter requires the `RECORD_AUDIO` permission to already be granted and taps the mic through a dedicated `AudioRecord`, independent of any recording happening elsewhere (e.g. vision-camera); concurrent capture support depends on the device. `setPreferredAudioInput` works on Android 12/API 31+ via `AudioManager.setCommunicationDevice` — since that API only accepts output/communication routes (the platform auto-pairs the matching mic) and only takes effect in `MODE_IN_COMMUNICATION`, it puts the session into that mode and only switches inputs that have a corresponding route (built-in mic, wired headset, Bluetooth SCO/BLE, USB, line-in, hearing aid). `configureAudio`/`activate` remain iOS only and no-op on Android.
 
 ## Installation
 

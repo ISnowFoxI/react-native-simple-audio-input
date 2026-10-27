@@ -169,6 +169,11 @@
       }
     }
   },
+  "codegenConfig": {
+    "name": "SimpleAudioInputSpec",
+    "type": "modules",
+    "jsSrcsDir": "src"
+  },
   "create-react-native-library": {
     "type": "nitro-module",
     "languages": "kotlin-swift",
