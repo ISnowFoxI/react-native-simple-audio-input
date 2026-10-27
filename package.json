@@ -1,6 +1,6 @@
 {
   "name": "react-native-simple-audio-input",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A simple audio configuration library to use in tandem with react-native-vision-camera",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -168,6 +168,11 @@
         }
       }
     }
+  },
+  "codegenConfig": {
+    "name": "SimpleAudioInputSpec",
+    "type": "modules",
+    "jsSrcsDir": "src"
   },
   "create-react-native-library": {
     "type": "nitro-module",

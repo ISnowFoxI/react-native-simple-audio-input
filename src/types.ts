@@ -65,6 +65,20 @@ export const InputOutputPort = {
    * The device type is unknown.
    */
   Unknown: 'Unknown',
+  /**
+   * An I/O connection to a Bluetooth LE (Low Energy) Audio headset.
+   *
+   * Android only (`AudioDeviceInfo.TYPE_BLE_HEADSET`) — classic Bluetooth
+   * headsets report as `BluetoothHFP` on both platforms, but LE Audio has no
+   * `AVAudioSession.Port` equivalent.
+   */
+  BleHeadset: 'BleHeadset',
+  /**
+   * An I/O connection to a hearing aid device.
+   *
+   * Android only (`AudioDeviceInfo.TYPE_HEARING_AID`).
+   */
+  HearingAid: 'HearingAid',
 } as const;
 
 export type InputPort = (typeof InputPort)[keyof typeof InputPort];

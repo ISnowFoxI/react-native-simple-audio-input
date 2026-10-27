@@ -16,7 +16,13 @@ export interface SimpleAudioInput extends HybridObject<{
    * `getAvailableAudioInputs`. Falls back to the default input and reports a
    * warning if the port can no longer be found or the switch fails.
    *
-   * iOS only.
+   * On Android, requires API 31+ (uses `AudioManager.setCommunicationDevice`,
+   * which only accepts output/communication routes — the platform pairs the
+   * matching mic automatically, and puts the session into
+   * `MODE_IN_COMMUNICATION` for the routing to take effect). Only inputs with
+   * a corresponding communication route are switchable (built-in mic, wired
+   * headset, Bluetooth SCO/BLE, USB, line-in, hearing aid); others report a
+   * warning and no-op.
    */
   setPreferredAudioInput(
     port: PortDescription,
@@ -29,7 +35,13 @@ export interface SimpleAudioInput extends HybridObject<{
    * switching mics via `setPreferredAudioInput`), interruptions, and
    * foreground/background transitions.
    *
-   * iOS only; returns a listener id to pass to `removeInputLevelListener`.
+   * On Android, requires the `RECORD_AUDIO` permission to already be granted
+   * (silently does nothing until it is) and taps the mic through a dedicated
+   * `AudioRecord`, separate from `configureAudioSession`/`activate` (which
+   * remain no-ops there) and from any recording happening elsewhere (e.g.
+   * vision-camera) — concurrent capture support depends on the device.
+   *
+   * Returns a listener id to pass to `removeInputLevelListener`.
    */
   addInputLevelListener(callback: (level: number) => void): number;
   removeInputLevelListener(id: number): void;
@@ -38,7 +50,7 @@ export interface SimpleAudioInput extends HybridObject<{
    * Bluetooth device connecting) with no payload — call
    * `getAvailableAudioInputs` again from the callback to refresh your list.
    *
-   * iOS only; returns a listener id to pass to `removeRouteChangeListener`.
+   * Returns a listener id to pass to `removeRouteChangeListener`.
    */
   addRouteChangeListener(callback: () => void): number;
   removeRouteChangeListener(id: number): void;
